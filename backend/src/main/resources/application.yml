@@ -1,0 +1,80 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: robotdemo
+  profiles:
+    active: dev
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/robotdemo?useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:robotdemo}
+    password: ${DB_PASSWORD:robotdemo123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 5000ms
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# JWT 配置
+jwt:
+  secret: ${JWT_SECRET:robotdemo-jwt-secret-key-change-in-production}
+  expiration: 86400000
+
+# 邮政接口配置
+postal:
+  # Mock 模式开关：true=Mock模式, false=真实调用
+  mock-enabled: ${POSTAL_MOCK_ENABLED:true}
+  platform-code: ${POSTAL_PLATFORM_CODE:ROBOT}
+  src-sys-id: ${POSTAL_SRC_SYS_ID:ROBOT}
+  dst-sys-id: XYDYYQDXT
+  version: YY-1.0
+  sign-key: ${POSTAL_SIGN_KEY:dcff43b0fea660914aAFHElVnrq8}
+  base-url:
+    uat: ${POSTAL_UAT_URL:https://yyqduat.11185.cn/ptfwApi/getMessage}
+    prod: ${POSTAL_PROD_URL:https://yyqd.11185.cn/ptfwApi/getMessage}
+  retry:
+    max-attempts: 3
+    backoff-ms: 1000
+  timeout-ms: 10000
+
+# 业务配置
+biz:
+  inventory:
+    low-stock-threshold: 5
+  task:
+    default-timeout-seconds: 300
+    max-retry-count: 3
+
+# Knife4j API文档
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+knife4j:
+  enable: true
