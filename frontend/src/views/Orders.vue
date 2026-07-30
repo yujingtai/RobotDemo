@@ -116,7 +116,7 @@ const handleCreateOrder = async () => {
       fetchData()
     }
   } catch (e) {
-    ElMessage.error(e.response?.data?.message || '创建失败')
+    // 错误已由 request.js 拦截器弹窗
   } finally { creating.value = false }
 }
 
@@ -136,7 +136,7 @@ const handleGenerateQr = async (row) => {
       fetchData()
     }
   } catch (e) {
-    ElMessage.error(e.response?.data?.message || '生成失败')
+    // 错误已由 request.js 拦截器弹窗
   } finally { payingId.value = null }
 }
 
@@ -158,7 +158,7 @@ const handleQueryPay = async (row) => {
       fetchData()
     }
   } catch (e) {
-    ElMessage.error(e.response?.data?.message || '查询失败')
+    // 错误已由 request.js 拦截器弹窗
   } finally { payingId.value = null }
 }
 

@@ -121,7 +121,7 @@ const handleSave = async () => {
     dialogVisible.value = false
     fetchData(page.value)
   } catch (e) {
-    ElMessage.error(e.response?.data?.message || '操作失败')
+    // 错误已由 request.js 拦截器弹窗
   } finally { saving.value = false }
 }
 

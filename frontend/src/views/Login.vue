@@ -50,9 +50,7 @@ const handleLogin = async () => {
       ElMessage.error(res.message || '登录失败')
     }
   } catch (e) {
-    const msg = e.response?.data?.message || e.message || '登录失败'
-    ElMessage.error(msg)
-    console.error('登录请求失败:', e)
+    // 错误已由 request.js 拦截器弹窗
   } finally {
     loading.value = false
   }
