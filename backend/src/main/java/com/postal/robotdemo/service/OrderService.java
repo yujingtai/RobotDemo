@@ -4,8 +4,10 @@ import com.postal.robotdemo.adapter.client.PostalClient;
 import com.postal.robotdemo.common.BizException;
 import com.postal.robotdemo.dto.postal.*;
 import com.postal.robotdemo.entity.OrderInfo;
+import com.postal.robotdemo.entity.Product;
 import com.postal.robotdemo.enums.OrderStatus;
 import com.postal.robotdemo.mapper.OrderInfoMapper;
+import com.postal.robotdemo.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 public class OrderService {
 
     private final OrderInfoMapper orderMapper;
+    private final ProductMapper productMapper;
     private final InventoryService inventoryService;
     private final PostalClient postalClient;
 
@@ -36,7 +39,16 @@ public class OrderService {
                                   BigDecimal postage, String customerName, String customerPhone,
                                   String receiveName, String receivePhone, String receiveAddress) {
 
-        // 1. 锁定库存
+        // 1. 校验商品是否存在且已上架
+        Product product = productMapper.selectById(productId);
+        if (product == null) {
+            throw new BizException(404, "商品不存在");
+        }
+        if (!"ON_SHELF".equals(product.getStatus())) {
+            throw new BizException(400, "商品已下架，无法下单");
+        }
+
+        // 2. 锁定库存
         inventoryService.lockStock(productId, quantity);
 
         // 2. 生成订单号
