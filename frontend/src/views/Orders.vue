@@ -97,7 +97,7 @@ const fetchData = async (p = 1) => {
   page.value = p
   loading.value = true
   try {
-    const res = await getOrders({ page, size: 10, status: statusFilter.value })
+    const res = await getOrders({ page: page.value, size: 10, status: statusFilter.value })
     if (res.code === 200) {
       tableData.value = res.data.records || []
       total.value = res.data.total || 0
