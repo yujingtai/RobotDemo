@@ -13,7 +13,7 @@
           <el-button type="primary" :loading="loading" style="width:100%" @click="handleLogin">登录</el-button>
         </el-form-item>
       </el-form>
-      <p class="hint">测试账号: admin/admin123, operator/admin123, maintainer/admin123</p>
+      <p class="hint">测试: admin/admin123 | operator/admin123 | maintainer/admin123</p>
     </el-card>
   </div>
 </template>
@@ -22,6 +22,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { login } from '@/api/index.js'
 
 const router = useRouter()
 const loading = ref(false)
@@ -31,16 +32,23 @@ const rules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
 
-const handleLogin = () => {
+const handleLogin = async () => {
   loading.value = true
-  // TODO: 真实登录接口
-  setTimeout(() => {
-    localStorage.setItem('token', 'mock-token')
-    localStorage.setItem('user', JSON.stringify({ username: form.username, role: 'ADMIN' }))
-    ElMessage.success('登录成功')
-    router.push('/')
+  try {
+    const res = await login(form)
+    if (res.code === 200) {
+      localStorage.setItem('token', res.data.token)
+      localStorage.setItem('user', JSON.stringify(res.data))
+      ElMessage.success('登录成功')
+      router.push('/')
+    } else {
+      ElMessage.error(res.message || '登录失败')
+    }
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '登录失败')
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 </script>
 
