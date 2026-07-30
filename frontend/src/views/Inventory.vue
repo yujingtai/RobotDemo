@@ -2,7 +2,8 @@
   <div>
     <h3>库存管理</h3>
     <el-table :data="tableData" border v-loading="loading">
-      <el-table-column prop="productId" label="商品ID" width="80" />
+      <el-table-column prop="productName" label="商品名称" min-width="140" />
+      <el-table-column prop="productId" label="商品ID" width="70" />
       <el-table-column prop="totalQuantity" label="总库存" width="100" />
       <el-table-column prop="lockedQuantity" label="锁定库存" width="100" />
       <el-table-column prop="availableQuantity" label="可用库存" width="100" />

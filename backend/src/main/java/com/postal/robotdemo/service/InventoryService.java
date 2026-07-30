@@ -7,6 +7,7 @@ import com.postal.robotdemo.entity.Alert;
 import com.postal.robotdemo.enums.AlertLevel;
 import com.postal.robotdemo.mapper.AlertMapper;
 import com.postal.robotdemo.mapper.InventoryMapper;
+import com.postal.robotdemo.vo.InventoryVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +32,11 @@ public class InventoryService {
 
     private static final String LOCK_KEY_PREFIX = "inventory:lock:";
 
-    public List<Inventory> listAll() {
+    public List<InventoryVO> listAll() {
+        return inventoryMapper.listWithProductName();
+    }
+
+    public List<Inventory> listAllRaw() {
         LambdaQueryWrapper<Inventory> qw = new LambdaQueryWrapper<>();
         qw.orderByAsc(Inventory::getAvailableQuantity);
         return inventoryMapper.selectList(qw);
