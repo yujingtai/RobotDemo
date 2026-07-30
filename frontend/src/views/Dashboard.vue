@@ -10,14 +10,6 @@
     <el-row :gutter="16" style="margin-top:16px">
       <el-col :span="12">
         <el-card>
-          <h4>邮政对接状态</h4>
-          <p>Mock 模式: {{ postalMockEnabled ? '已启用' : '真实接口' }}</p>
-          <p>DstSysID: XYDYYQDXT</p>
-          <p>Signature: MD5 + BASE64</p>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card>
           <h4>快速操作</h4>
           <el-button type="primary" @click="$router.push('/products')">管理商品</el-button>
           <el-button type="success" style="margin-left:8px" @click="$router.push('/orders')">查看订单</el-button>
@@ -28,10 +20,25 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, onMounted } from 'vue'
+import { getProducts, getOrders, getTasks, getAlerts } from '@/api/index.js'
 
 const stats = reactive({ products: 0, orders: 0, tasks: 0, alerts: 0 })
-const postalMockEnabled = true
+
+onMounted(async () => {
+  try {
+    const [pRes, oRes, tRes, aRes] = await Promise.all([
+      getProducts({ page: 1, size: 1 }),
+      getOrders({ page: 1, size: 1 }),
+      getTasks({ page: 1, size: 1 }),
+      getAlerts({ page: 1, size: 1, status: 'OPEN' }),
+    ])
+    stats.products = pRes.data?.total || 0
+    stats.orders = oRes.data?.total || 0
+    stats.tasks = tRes.data?.total || 0
+    stats.alerts = aRes.data?.total || 0
+  } catch (e) { /* 错误已由拦截器弹窗 */ }
+})
 </script>
 
 <style scoped>
