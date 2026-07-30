@@ -25,12 +25,20 @@ api.interceptors.response.use(
     return data
   },
   (err) => {
-    // HTTP 错误 (4xx/5xx) → 统一弹窗
+    // HTTP 错误 (4xx/5xx)
     const msg = err.response?.data?.message || err.message || '网络错误'
+    const isLoginRequest = err.config?.url === '/auth/login'
+
     if (err.response?.status === 401) {
-      ElMessage.error('登录已过期，请重新登录')
-      localStorage.clear()
-      window.location.href = '/login'
+      if (isLoginRequest) {
+        // 登录请求的401 = 密码错误, 只弹业务提示
+        ElMessage.error(msg)
+      } else {
+        // 其他401 = token过期
+        ElMessage.error('登录已过期，请重新登录')
+        localStorage.clear()
+        window.location.href = '/login'
+      }
     } else {
       ElMessage.error(msg)
     }
