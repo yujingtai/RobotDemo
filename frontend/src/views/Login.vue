@@ -4,10 +4,10 @@
       <h2>主题邮局机器人后台管理</h2>
       <el-form ref="formRef" :model="form" :rules="rules">
         <el-form-item prop="username">
-          <el-input v-model="form.username" placeholder="用户名" prefix-icon="User" />
+          <el-input v-model="form.username" placeholder="用户名" :prefix-icon="User" />
         </el-form-item>
         <el-form-item prop="password">
-          <el-input v-model="form.password" type="password" placeholder="密码" prefix-icon="Lock" show-password />
+          <el-input v-model="form.password" type="password" placeholder="密码" :prefix-icon="Lock" show-password />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :loading="loading" style="width:100%" @click="handleLogin">登录</el-button>
@@ -22,10 +22,12 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { User, Lock } from '@element-plus/icons-vue'
 import { login } from '@/api/index.js'
 
 const router = useRouter()
 const loading = ref(false)
+const formRef = ref(null)
 const form = reactive({ username: '', password: '' })
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
@@ -33,9 +35,12 @@ const rules = {
 }
 
 const handleLogin = async () => {
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) return
+
   loading.value = true
   try {
-    const res = await login(form)
+    const res = await login({ username: form.username, password: form.password })
     if (res.code === 200) {
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('user', JSON.stringify(res.data))
@@ -45,7 +50,9 @@ const handleLogin = async () => {
       ElMessage.error(res.message || '登录失败')
     }
   } catch (e) {
-    ElMessage.error(e.response?.data?.message || '登录失败')
+    const msg = e.response?.data?.message || e.message || '登录失败'
+    ElMessage.error(msg)
+    console.error('登录请求失败:', e)
   } finally {
     loading.value = false
   }

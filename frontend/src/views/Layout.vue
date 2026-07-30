@@ -34,6 +34,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { DataLine, Goods, Document, Box, Monitor, Bell, List, User } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
