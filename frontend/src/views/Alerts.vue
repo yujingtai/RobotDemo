@@ -1,7 +1,7 @@
 <template>
   <div>
     <h3>告警管理</h3>
-    <el-select v-model="statusFilter" placeholder="状态筛选" clearable style="width:160px; margin-bottom:12px" @change="fetchData">
+    <el-select v-model="statusFilter" placeholder="状态筛选" clearable style="width:160px; margin-bottom:12px" @change="() => fetchData()">
       <el-option label="待处理" value="OPEN" />
       <el-option label="已确认" value="ACKNOWLEDGED" />
       <el-option label="已解决" value="RESOLVED" />

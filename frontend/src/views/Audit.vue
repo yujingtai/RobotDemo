@@ -3,12 +3,12 @@
     <h3>审计日志</h3>
     <el-row :gutter="8" style="margin-bottom:12px">
       <el-col :span="4">
-        <el-select v-model="typeFilter" placeholder="操作类型" clearable @change="fetchData">
+        <el-select v-model="typeFilter" placeholder="操作类型" clearable @change="() => fetchData()">
           <el-option v-for="t in types" :key="t" :label="t" :value="t" />
         </el-select>
       </el-col>
       <el-col :span="4">
-        <el-input v-model="operatorFilter" placeholder="操作人" clearable @change="fetchData" />
+        <el-input v-model="operatorFilter" placeholder="操作人" clearable @change="() => fetchData()" />
       </el-col>
     </el-row>
 

@@ -3,7 +3,7 @@
     <h3>任务监控</h3>
     <el-row :gutter="8" style="margin-bottom:12px">
       <el-col :span="4">
-        <el-select v-model="statusFilter" placeholder="状态筛选" clearable @change="fetchData">
+        <el-select v-model="statusFilter" placeholder="状态筛选" clearable @change="() => fetchData()">
           <el-option v-for="s in statuses" :key="s" :label="s" :value="s" />
         </el-select>
       </el-col>

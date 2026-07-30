@@ -5,7 +5,7 @@
       <el-button type="primary" @click="showCreateDialog">创建订单</el-button>
     </div>
 
-    <el-select v-model="statusFilter" placeholder="状态筛选" clearable style="width:160px; margin-bottom:12px" @change="fetchData">
+    <el-select v-model="statusFilter" placeholder="状态筛选" clearable style="width:160px; margin-bottom:12px" @change="() => fetchData()">
       <el-option label="待支付" value="PENDING" />
       <el-option label="支付中" value="PAYING" />
       <el-option label="已支付" value="PAID" />

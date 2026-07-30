@@ -6,9 +6,9 @@
     </div>
 
     <el-row :gutter="8" style="margin-bottom:12px">
-      <el-col :span="6"><el-input v-model="searchKeyword" placeholder="搜索商品名称" clearable @change="fetchData" /></el-col>
+      <el-col :span="6"><el-input v-model="searchKeyword" placeholder="搜索商品名称" clearable @change="() => fetchData()" /></el-col>
       <el-col :span="4">
-        <el-select v-model="searchStatus" placeholder="状态" clearable @change="fetchData">
+        <el-select v-model="searchStatus" placeholder="状态" clearable @change="() => fetchData()">
           <el-option label="上架" value="ON_SHELF" />
           <el-option label="下架" value="OFF_SHELF" />
         </el-select>
