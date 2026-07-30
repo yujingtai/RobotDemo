@@ -8,7 +8,7 @@ spring:
     active: dev
 
   datasource:
-    url: jdbc:mysql://localhost:3306/robotdemo?useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/robotdemo?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME:robotdemo}
     password: ${DB_PASSWORD:robotdemo123}
     driver-class-name: com.mysql.cj.jdbc.Driver
