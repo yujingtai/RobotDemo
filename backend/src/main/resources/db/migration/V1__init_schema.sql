@@ -143,8 +143,8 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
 -- 索引：支持按时间+类型+操作人检索
 ALTER TABLE `audit_log` ADD KEY `idx_time_type_operator` (`operate_time`, `operate_type`, `operator`);
 
--- 初始化管理员账号 admin/admin123 (BCrypt $2b$10$)
+-- 初始化管理员账号 (密码均为 admin123)
 INSERT INTO `sys_user` (`username`, `password`, `real_name`, `role`) VALUES
-('admin', '$2b$10$14VevHriBhBNqyvItZmb1OD0MHTvehRiN2x9tI8G2R77ZVjurPTAa', '系统管理员', 'ADMIN'),
-('operator', '$2b$10$14VevHriBhBNqyvItZmb1OD0MHTvehRiN2x9tI8G2R77ZVjurPTAa', '运营人员', 'OPERATOR'),
-('maintainer', '$2b$10$14VevHriBhBNqyvItZmb1OD0MHTvehRiN2x9tI8G2R77ZVjurPTAa', '维护人员', 'MAINTAINER');
+('admin', '$2a$10$ki9cH5VTtwAOyY3R9tzV6ON62s6qJNXbLwJCXqseS.Kfri7RnVO.m', '系统管理员', 'ADMIN'),
+('operator', '$2a$10$ki9cH5VTtwAOyY3R9tzV6ON62s6qJNXbLwJCXqseS.Kfri7RnVO.m', '运营人员', 'OPERATOR'),
+('maintainer', '$2a$10$ki9cH5VTtwAOyY3R9tzV6ON62s6qJNXbLwJCXqseS.Kfri7RnVO.m', '维护人员', 'MAINTAINER');
