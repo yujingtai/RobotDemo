@@ -225,19 +225,19 @@ CREATED → QUEUED → RUNNING → SUCCEEDED
 
 ## 核心功能模块
 
-- [x] 项目骨架搭建 (docker-compose + 分层结构)
-- [x] 商品管理 (CRUD/上下架/标签/陈列点位/机器人抓取标识)
-- [x] 库存管理 (Redis分布式锁 + 乐观锁/锁定释放扣减/低库存告警/视觉校验回写)
-- [x] 订单状态机 (PENDING→PAYING→PAID/FAILED/CANCELLED/TIMEOUT/MANUAL_REQUIRED)
-- [x] 支付闭环 (创建订单→邮件号→资费→二维码→支付状态流转→库存联动)
-- [x] 任务调度状态机 (8状态 + 连续失败转人工 + 优先级)
-- [x] 邮政对接适配层 (YYRoot + SessionHeader + 签名算法 + 5接口DTO + Mock + 13错误码)
-- [x] JWT + RBAC 鉴权 (ADMIN/OPERATOR/MAINTAINER)
-- [x] 审计日志 (操作人/时间/类型/对象/结果/流水号)
-- [x] 告警管理 (INFO/WARN/ERROR/CRITICAL 4级别)
-- [x] 后台管理界面 (8页面 + 路由守卫 + 分权菜单)
-- [ ] 断网降级 (设计思路已有, 待实现补偿同步)
-- [ ] 集成测试 (签名算法/订单状态机/库存并发锁)
+-  项目骨架搭建 (docker-compose + 分层结构)
+-  商品管理 (CRUD/上下架/标签/陈列点位/机器人抓取标识)
+-  库存管理 (Redis分布式锁 + 乐观锁/锁定释放扣减/低库存告警/视觉校验回写)
+-  订单状态机 (PENDING→PAYING→PAID/FAILED/CANCELLED/TIMEOUT/MANUAL_REQUIRED)
+-  支付闭环 (创建订单→邮件号→资费→二维码→支付状态流转→库存联动)
+-  任务调度状态机 (8状态 + 连续失败转人工 + 优先级)
+-  邮政对接适配层 (YYRoot + SessionHeader + 签名算法 + 5接口DTO + Mock + 13错误码)
+-  JWT + RBAC 鉴权 (ADMIN/OPERATOR/MAINTAINER)
+-  审计日志 (操作人/时间/类型/对象/结果/流水号)
+-  告警管理 (INFO/WARN/ERROR/CRITICAL 4级别)
+-  后台管理界面 (8页面 + 路由守卫 + 分权菜单)
+-  断网降级 (设计思路已有, 待实现补偿同步)
+-  集成测试 (签名算法/订单状态机/库存并发锁)
 
 ## 异常分支覆盖
 
