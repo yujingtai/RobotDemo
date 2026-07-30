@@ -2,6 +2,7 @@ package com.postal.robotdemo.controller;
 
 import com.postal.robotdemo.common.Result;
 import com.postal.robotdemo.entity.Product;
+import com.postal.robotdemo.mapper.ProductMapper;
 import com.postal.robotdemo.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductMapper productMapper;
 
     @GetMapping
     public Result<?> list(@RequestParam(defaultValue = "1") int page,
@@ -24,9 +26,7 @@ public class ProductController {
 
     @GetMapping("/{id}")
     public Result<Product> get(@PathVariable Long id) {
-        Product p = new Product();
-        p.setId(id);
-        return Result.ok(p);  // 简化实现
+        return Result.ok(productMapper.selectById(id));
     }
 
     @PostMapping

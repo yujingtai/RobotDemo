@@ -1,6 +1,7 @@
 package com.postal.robotdemo.controller;
 
 import com.postal.robotdemo.common.Result;
+import com.postal.robotdemo.mapper.InventoryMapper;
 import com.postal.robotdemo.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +15,7 @@ import java.util.Map;
 public class InventoryController {
 
     private final InventoryService inventoryService;
+    private final InventoryMapper inventoryMapper;
 
     @GetMapping
     public Result<?> list() {
@@ -28,13 +30,12 @@ public class InventoryController {
     @PostMapping("/{productId}/restock")
     @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
     public Result<Void> restock(@PathVariable Long productId, @RequestBody Map<String, Integer> body) {
-        // 简化: 直接修改库存
         var inv = inventoryService.getByProductId(productId);
         if (inv != null) {
             int qty = body.getOrDefault("quantity", 0);
             inv.setTotalQuantity(inv.getTotalQuantity() + qty);
             inv.setAvailableQuantity(inv.getAvailableQuantity() + qty);
-            // update via mapper
+            inventoryMapper.updateById(inv);
         }
         return Result.ok();
     }

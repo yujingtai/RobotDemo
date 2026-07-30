@@ -14,8 +14,8 @@ public class Inventory {
     private Integer lockedQuantity;
     private Integer availableQuantity;
     private Integer lowThreshold;
-    private Integer sampleMissing;
-    private Integer sampleMisplaced;
+    private Integer sampleMissing = 0;
+    private Integer sampleMisplaced = 0;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     @TableField(fill = FieldFill.INSERT_UPDATE)

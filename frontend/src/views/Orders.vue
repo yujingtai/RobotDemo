@@ -77,7 +77,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getOrders, createOrder, generateQrCode, queryPayStatus } from '@/api/index.js'
+import { getOrders, getOrder, createOrder, generateQrCode, queryPayStatus } from '@/api/index.js'
 
 const loading = ref(false)
 const tableData = ref([])
@@ -125,11 +125,15 @@ const handleGenerateQr = async (row) => {
   try {
     const res = await generateQrCode(row.id)
     if (res.code === 200) {
-      currentOrder.value = { ...row, payTradeNo: '', payQrUrl: res.data }
-      // 重新获取订单详情获取 payTradeNo
+      // 重新获取订单获取最新的 payTradeNo
+      const orderRes = await getOrder(row.id)
+      if (orderRes.code === 200) {
+        currentOrder.value = orderRes.data
+      } else {
+        currentOrder.value = { ...row, payQrUrl: res.data }
+      }
       qrVisible.value = true
-      // 延迟刷新获取最新数据
-      setTimeout(fetchData, 500)
+      fetchData()
     }
   } catch (e) {
     ElMessage.error(e.response?.data?.message || '生成失败')
@@ -147,7 +151,7 @@ const handleQueryPay = async (row) => {
         ElMessage.success('支付成功!')
         qrVisible.value = false
       } else if (zfzt === '00') {
-        ElMessage.info('支付处理中... (Mock: 下次查询将成功)')
+        ElMessage.info('支付处理中... (再次查询将成功)')
       } else {
         ElMessage.warning('支付结果: ' + zfzt)
       }

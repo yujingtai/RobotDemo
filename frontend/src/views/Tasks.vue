@@ -45,7 +45,9 @@ const statusTag = (s) => ({ SUCCEEDED:'success', FAILED:'danger', RUNNING:'warni
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await getTasks({ status: statusFilter.value })
+    const params = { page: 1, size: 50 }
+    if (statusFilter.value) params.status = statusFilter.value
+    const res = await getTasks(params)
     if (res.code === 200) tableData.value = res.data.records || []
   } finally { loading.value = false }
 }

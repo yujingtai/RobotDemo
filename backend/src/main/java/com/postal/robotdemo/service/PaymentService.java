@@ -25,12 +25,14 @@ import java.util.UUID;
 public class PaymentService {
 
     private final OrderInfoMapper orderMapper;
+    private final OrderService orderService;
     private final InventoryService inventoryService;
     private final TaskInfoMapper taskMapper;
     private final AlertMapper alertMapper;
 
     /**
      * 轮询支付状态（最多3次，间隔递增）
+     * 每次查询触发 Mock 支付状态流转(00→01)
      */
     @Transactional
     public String pollPayStatus(Long orderId) {
@@ -49,38 +51,32 @@ public class PaymentService {
         taskMapper.insert(task);
 
         try {
-            String zfzt = null;
             for (int i = 0; i < 3; i++) {
                 try {
-                    // 模拟间隔: 1s, 2s, 3s
                     Thread.sleep((i + 1) * 1000L);
                 } catch (InterruptedException ignored) {}
 
-                // Mock 模式下第一次返回00，第二次返回01
-                // 这里直接查本地订单状态 (由 OrderService.queryAndUpdatePayStatus 更新)
-                OrderInfo latest = orderMapper.selectById(orderId);
-                if (latest != null && latest.getStatus() != null) {
-                    switch (latest.getStatus()) {
-                        case PAID:
-                            task.setStatus(TaskStatus.SUCCEEDED);
-                            task.setEndTime(LocalDateTime.now());
-                            task.setDurationMs(
-                                java.time.Duration.between(task.getStartTime(), task.getEndTime()).toMillis());
-                            taskMapper.updateById(task);
-                            return "01";
-                        case FAILED:
-                            task.setStatus(TaskStatus.FAILED);
-                            task.setFailReason("支付失败");
-                            taskMapper.updateById(task);
-                            return "02";
-                        case TIMEOUT:
-                            task.setStatus(TaskStatus.FAILED);
-                            task.setFailReason("支付超时");
-                            taskMapper.updateById(task);
-                            return null;
-                        default:
-                            break;
-                    }
+                // 核心: 调用 OrderService 触发 Mock 支付状态流转
+                String zfzt = orderService.queryAndUpdatePayStatus(orderId);
+
+                if ("01".equals(zfzt)) {
+                    task.setStatus(TaskStatus.SUCCEEDED);
+                    task.setEndTime(LocalDateTime.now());
+                    task.setDurationMs(
+                        java.time.Duration.between(task.getStartTime(), task.getEndTime()).toMillis());
+                    taskMapper.updateById(task);
+                    return "01";
+                }
+                if ("02".equals(zfzt)) {
+                    task.setStatus(TaskStatus.FAILED);
+                    task.setFailReason("支付失败");
+                    task.setEndTime(LocalDateTime.now());
+                    taskMapper.updateById(task);
+                    return "02";
+                }
+                // "00" 支付中, 继续下一次轮询
+                if (zfzt != null) {
+                    log.info("轮询第{}次: 支付状态={}, 继续等待...", i + 1, zfzt);
                 }
             }
 
@@ -94,7 +90,6 @@ public class PaymentService {
             task.setEndTime(LocalDateTime.now());
             taskMapper.updateById(task);
 
-            // 创建告警
             Alert alert = new Alert();
             alert.setAlertType("PAY_ERROR");
             alert.setLevel(AlertLevel.ERROR);
