@@ -9,9 +9,9 @@
 | 后端框架 | Java 17+, Spring Boot 3.3.x, Spring MVC, Spring Security |
 | ORM | MyBatis-Plus 3.5.x |
 | 数据库 | MySQL 8.x（手动建表） |
-| 缓存 | Redis 7 (库存原子操作 / 分布式锁) |
-| 鉴权 | Spring Security + JWT (RBAC) |
-| API 文档 | Knife4j (OpenAPI 3.0) |
+| 缓存 | Redis 7（库存原子操作 / 分布式锁） |
+| 鉴权 | Spring Security + JWT（RBAC） |
+| API 文档 | Knife4j（OpenAPI 3.0） |
 | 前端 | Vue 3 + Vite + Element Plus + Pinia + Vue Router |
 | 基础设施 | Docker Compose |
 
@@ -21,30 +21,31 @@
 RobotDemo/
 ├── backend/                            # Spring Boot 后端
 │   └── src/main/java/com/postal/robotdemo/
-│       ├── adapter/                    # 邮政系统对接适配层 (重点)
-│       │   ├── SignatureUtil.java      # MD5+BASE64 签名 (附录三)
-│       │   ├── SessionHeader.java      # 会话控制头
+│       ├── adapter/                    # 邮政系统对接适配层 ★重点
+│       │   ├── SignatureUtil.java      # MD5+BASE64 签名（附录三）
+│       │   ├── SessionHeader.java      # 会话控制头（请求/应答）
 │       │   ├── YYRoot.java             # 统一请求根结构
-│       │   ├── TransactionIdGenerator  # 32位全局唯一ID
-│       │   ├── PostalErrorCode.java    # 13个错误码映射
-│       │   ├── client/PostalClient.java # 统一调用+幂等+重试
-│       │   └── mock/PostalMockService  # Mock 桩 (5场景)
-│       ├── controller/                 # 接口层 (9个Controller)
-│       ├── service/                    # 业务服务层 (7个Service)
-│       ├── mapper/                     # MyBatis-Plus Mapper
-│       ├── entity/                     # 数据库实体 (7个)
-│       ├── dto/postal/                 # 邮政接口DTO (10个, V_/N_/F_前缀)
-│       ├── enums/                      # 状态枚举 (6个)
-│       ├── config/                     # MyBatisPlus/Redis/MetaHandler
+│       │   ├── TransactionIdGenerator  # 32位全局唯一ID生成器
+│       │   ├── PostalErrorCode.java    # 13个邮政错误码→本地映射
+│       │   ├── client/PostalClient.java # 统一调用 + 幂等 + 重试 + Mock开关
+│       │   └── mock/PostalMockService  # Mock桩（5场景+支付状态流转）
+│       ├── controller/                 # 接口层（9个 Controller）
+│       ├── service/                    # 业务服务层（7个 Service）
+│       ├── mapper/                     # MyBatis-Plus Mapper（7个 + 自定义SQL）
+│       ├── entity/                     # 数据库实体（7个）
+│       ├── dto/postal/                 # 邮政接口DTO（10个，V_/N_/F_前缀）
+│       ├── vo/                         # 视图对象（InventoryVO联表）
+│       ├── enums/                      # 状态枚举（OrderStatus/TaskStatus等6个）
+│       ├── config/                     # MyBatisPlus/Redis/MetaObjectHandler
 │       ├── security/                   # JWT + Spring Security + RBAC
 │       └── common/                     # Result/BizException/GlobalExceptionHandler
 ├── frontend/                           # Vue 3 前端
 │   └── src/
-│       ├── views/                      # 8个页面 + Layout
-│       ├── router/                     # 路由守卫 (未登录→/login)
-│       ├── api/                        # 10个API封装
-│       └── utils/                      # Axios + JWT拦截器
-├── docker-compose.yml                  # MySQL + Redis 一键启动
+│       ├── views/                      # 8个页面 + Layout（路由守卫）
+│       ├── router/                     # beforeEach 鉴权拦截
+│       ├── api/                        # 10个后端API封装
+│       └── utils/                      # Axios + JWT拦截器 + 统一错误弹窗
+├── docker-compose.yml                  # MySQL 8.0 + Redis 7 一键启动
 └── README.md
 ```
 
@@ -56,16 +57,17 @@ RobotDemo/
 - Node.js 18+
 - Docker Desktop
 
-### 2. 启动 MySQL + Redis
+### 2. 启动中间件
 
 ```bash
 docker-compose up -d
 ```
 
-### 3. 手动建表
+### 3. 手动建表 + 导入演示数据
 
 ```bash
 docker exec -i robotdemo-mysql mysql -uroot -proot123 robotdemo < backend/src/main/resources/db/migration/V1__init_schema.sql
+docker exec -i robotdemo-mysql mysql -uroot -proot123 robotdemo < backend/src/main/resources/db/demo_data.sql
 ```
 
 ### 4. 启动后端
@@ -75,54 +77,64 @@ cd backend
 mvn spring-boot:run
 ```
 
-后端启动后访问: http://localhost:8080  
-API 文档 (Knife4j): http://localhost:8080/doc.html
+后端: http://localhost:8080 | API文档: http://localhost:8080/doc.html
 
 ### 5. 启动前端
 
-新开终端：
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-前端启动后访问: http://localhost:5173
+前端: http://localhost:5173
 
 ### 6. 测试账号
 
-| 角色 | 用户名 | 密码 | 权限 |
-|------|--------|------|------|
-| 管理员 | admin | admin123 | 全部 (含用户管理) |
+| 角色 | 用户名 | 密码 | 权限范围 |
+|------|--------|------|---------|
+| 管理员 | admin | admin123 | 全部（含用户管理） |
 | 运营 | operator | admin123 | 商品/订单/库存 |
 | 维护 | maintainer | admin123 | 任务/告警/库存 |
 
 ## 业务流程演示
 
 ```
-1. 登录 (admin/admin123)
-2. 商品管理 → 新增商品 (如 "故宫邮册" 39.9元)
-3. 订单管理 → 创建订单 → 系统自动:
-   a) 锁定库存 (Redis分布式锁)
-   b) 调用邮政Mock生成快递单号
-   c) 调用邮政Mock查询邮费
-4. 生成支付二维码 → Mock返回支付流水号
-5. 第1次查询支付 → Mock返回 "00 支付中"
-6. 第2次查询支付 → Mock返回 "01 支付成功" → 自动扣减库存
-7. 库存管理 → 看到库存少了1件
-8. 任务监控 → 看到支付任务执行记录
-9. 审计日志 → 看到操作留痕
+1. 登录 admin/admin123
+2. 商品管理 → 新增商品（"故宫邮册" 39.9元）
+3. 订单管理 → 创建订单 → 系统自动：
+   a) 校验商品存在且已上架
+   b) Redis 分布式锁 + 数据库乐观锁 锁定库存
+   c) 调 PostalMock 生成邮件号码 EMS...
+   d) 调 PostalMock 查询邮费 12元
+   e) 保存订单，状态=PENDING
+4. 生成支付二维码 → Mock 返回支付流水号 + 平台流水号
+5. 第1次查询支付 → Mock 返回 zfzt=00（支付中）
+6. 第2次查询支付 → Mock 返回 zfzt=01（支付成功）→ 自动扣减库存
+7. 库存管理 → 可用库存-1，商品名称显示（联表查询）
+8. 任务监控 → 支付查询任务状态=SUCCEEDED，含耗时记录
+9. 审计日志 → 按操作类型/操作人筛选
 ```
 
-## 邮政对接适配层 (核心模块)
+## Mock 模式
 
-### 设计思路
+配置开关（`application.yml`）：`postal.mock-enabled: true`
 
-采用适配器模式，业务代码通过 `PostalClient` 统一调用邮政接口，Mock/真实接口通过配置开关切换，业务代码不感知差异。
+| 场景 | Mock 行为 |
+|------|----------|
+| 正常返回 | 按接口文档结构返回 JSON |
+| 支付状态流转 | 第1次→00（支付中），第2次→01（成功） |
+| 签名错误 | 返回 code=1002 |
+| 报文解密错误 | 返回 code=9009 |
+| 访问量超限 | 返回 code=1006 |
+| 超时模拟 | Thread.sleep(15s) |
 
-### 会话控制 (YYRoot)
+适配层与 Mock 通过配置切换，业务代码不感知差异。
 
-所有接口共用同一套请求封装：
+## 邮政对接适配层
+
+### 会话控制（YYRoot）
+
 ```json
 {
   "SessionHeader": {
@@ -139,113 +151,123 @@ npm run dev
 }
 ```
 
-### 签名算法 (严格按文档附录三)
-
-```java
-// 拼接: ServiceCode + Version + ActionCode + TransactionID
-//      + SrcSysID + DstSysID + ReqTime + SessionBody内容 + 秘钥
-String str = "F8" + "YY-1.0" + "0" + transactionId + "ROBOT"
-           + "XYDYYQDXT" + reqTime + sessionBodyJson;
-// MD5 + BASE64
-String digitalSign = Base64.getEncoder()
-    .encodeToString(MessageDigest.getInstance("MD5")
-    .digest((str + SECRET_KEY).getBytes(StandardCharsets.UTF_8)));
-```
-
-### TransactionID 格式
+### 签名算法（附录三）
 
 ```
-[5位平台编码] + [17位日期 yyyyMMddHHmmssfff] + [10位流水号]
-例: ROBOT202607301034560010000000001
+DigitalSign = BASE64( MD5( ServiceCode + Version + ActionCode + TransactionID
+                         + SrcSysID + DstSysID + ReqTime + SessionBody + 秘钥 ) )
 ```
 
-### 已封装的邮政接口
+### 已封装的5个接口
 
 | 接口 | 入参关键字段 | 出参关键字段 |
 |------|-------------|-------------|
-| 邮件资费查询 | productCode, postProvinceCode, disProvinceCode, weight, isValue | result.data.fee |
-| 邮件号码生成 | V_SFDM, V_JGBH, V_YWCPDM, V_YWCPMC | result.V_YJHM |
-| 收寄订单提交 | 100+字段(机构/员工/寄件人/收件人/邮件/包装物/内件/资费) | result.V_CXLSH, F_ZZF, F_YSZZF |
+| 邮件资费查询 | productCode, weight, 收发省市, isValue | result.data.fee |
+| 邮件号码生成 | V_SFDM, V_JGBH, V_YWCPDM | result.V_YJHM |
+| 收寄订单提交 | 100+字段（机构/员工/寄件人/收件人/包装物/内件/资费） | result.V_CXLSH, F_ZZF |
 | 生成收款二维码 | vJgbh, vTxdm, emp, vCxlsh | datas.V_PTLSH, V_ZFLSH, V_EWMURL |
-| 支付状态查询 | vCxlsh, vJgbh, vZflsh | result.zfzt (01/02/03/05/00) |
+| 支付状态查询 | vCxlsh, vJgbh, vZflsh | result.zfzt（01/02/03/05/00） |
 
-### Mock 模式
+### 错误码映射（13项）
 
-配置开关: `postal.mock-enabled: true`
-
-支持的场景:
-- 正常返回 (按接口文档结构)
-- 支付状态流转: 第1次查→"00"(支付中), 第2次→"01"(支付成功)
-- 签名错误 (1002)
-- 报文解密错误 (9009)
-- 访问量超限 (1006)
-- 超时模拟
-
-### 错误码映射
-
-| 邮政错误码 | 含义 | 本地错误码 |
-|-----------|------|-----------|
+| 邮政码 | 含义 | 本地码 |
+|--------|------|--------|
 | 0000 | 成功 | 200 |
-| 9009 | 报文解密错误 | 49009 |
 | 1002 | 签名错误 | 41002 |
 | 1006 | 访问量超限 | 41006 |
-| ... | 共13个映射 | |
+| 9009 | 报文解密错误 | 49009 |
+| ... | 共13项 | |
 
 ## 状态机设计
 
 ### 订单状态机
 
 ```
-PENDING (待支付)
-  → PAYING (支付中, 生成二维码后)
-    → PAID (支付成功, 扣库存)
-    → FAILED (支付失败, 释放库存)
-    → TIMEOUT (超时, 释放库存)
-    → MANUAL_REQUIRED (需人工处理)
-  → CANCELLED (已取消, 释放库存)
+PENDING ─→ PAYING ─→ PAID（扣库存）
+   │          │
+   │          ├──→ FAILED（释放库存）
+   │          └──→ TIMEOUT（释放库存）
+   └──────→ CANCELLED（释放库存）
+            → MANUAL_REQUIRED
 ```
 
 ### 任务状态机
 
 ```
 CREATED → QUEUED → RUNNING → SUCCEEDED
-                            → FAILED → (retry < max) → RUNNING
-                                     → (retry >= max) → MANUAL_REQUIRED (+告警)
-                            → CANCELLED
-                            → PAUSED
+                           → FAILED ─→（retry < max）→ RUNNING
+                           │         └（retry ≥ max）→ MANUAL_REQUIRED + 告警
+                           → CANCELLED
+                           → PAUSED
 ```
 
-## 权限设计 (RBAC)
+## RBAC 权限矩阵
 
-| 角色 | 商品CRUD | 订单管理 | 库存查看 | 任务监控 | 告警管理 | 审计日志 | 用户管理 |
-|------|---------|---------|---------|---------|---------|---------|---------|
-| ADMIN | 全部 | 全部 | 全部 | 全部 | 全部 | 全部 | 全部 |
+| 角色 | 商品CRUD | 订单管理 | 库存 | 任务 | 告警 | 审计 | 用户管理 |
+|------|---------|---------|------|------|------|------|---------|
+| ADMIN | 全部 | 全部 | 全部 | 全部 | 全部 | 全部 | **全部** |
 | OPERATOR | 全部 | 全部 | 全部 | 查看 | 查看 | 查看 | - |
 | MAINTAINER | 查看 | 查看 | 全部 | 全部 | 全部 | 查看 | - |
-
-## 核心功能模块
-
--  项目骨架搭建 (docker-compose + 分层结构)
--  商品管理 (CRUD/上下架/标签/陈列点位/机器人抓取标识)
--  库存管理 (Redis分布式锁 + 乐观锁/锁定释放扣减/低库存告警/视觉校验回写)
--  订单状态机 (PENDING→PAYING→PAID/FAILED/CANCELLED/TIMEOUT/MANUAL_REQUIRED)
--  支付闭环 (创建订单→邮件号→资费→二维码→支付状态流转→库存联动)
--  任务调度状态机 (8状态 + 连续失败转人工 + 优先级)
--  邮政对接适配层 (YYRoot + SessionHeader + 签名算法 + 5接口DTO + Mock + 13错误码)
--  JWT + RBAC 鉴权 (ADMIN/OPERATOR/MAINTAINER)
--  审计日志 (操作人/时间/类型/对象/结果/流水号)
--  告警管理 (INFO/WARN/ERROR/CRITICAL 4级别)
--  后台管理界面 (8页面 + 路由守卫 + 分权菜单)
--  断网降级 (设计思路已有, 待实现补偿同步)
--  集成测试 (签名算法/订单状态机/库存并发锁)
 
 ## 异常分支覆盖
 
 | 场景 | 处理方式 |
 |------|---------|
-| 支付超时 | 轮询3次后释放库存, 订单→TIMEOUT, 创建告警 |
-| 连续任务失败 | 超过max_retry→MANUAL_REQUIRED, 创建告警 |
-| 签名错误(1002) | 记录审计日志+告警, 停止重试 |
-| 断网/邮政不可达 | 本地维持订单创建/二维码展示, 链路恢复后补偿同步 |
-| 库存不足 | 事务回滚, 订单创建失败 |
-| 重复请求 | TransactionID去重, 幂等返回 |
+| 商品不存在/已下架下单 | 前置校验，BizException 返回提示 |
+| 库存不足 | 乐观锁 update 返回0行 → BizException，事务回滚 |
+| 支付超时 | 轮询3次后 → 订单→TIMEOUT，释放库存，创建告警 |
+| 连续任务失败 | 超过 max_retry → MANUAL_REQUIRED + ERROR 告警 |
+| 签名错误（1002） | 映射本地错误码 41002，记录日志 |
+| 重复请求 | TransactionID HashMap 去重，幂等 |
+| 断网/邮政不可达 | 设计已预留降级点，PostalClient 捕获异常不阻塞主流程 |
+
+---
+
+## 对照任务要求完成度
+
+### 已完成
+
+| 要求 | 完成情况 |
+|------|---------|
+| 后端分层架构（controller/service/adapter/mapper/entity/dto） | 完成，9Controller + 7Service + 7Mapper |
+| 7张核心数据模型建表（商品/库存/订单/任务/告警/用户/审计） | 完成，含主键/时间戳/逻辑删除/DECIMAL金额 |
+| 统一异常处理 + 响应封装 + 参数校验 | 完成 |
+| 配置外置 + 环境变量覆盖 + 多profile | 完成 |
+| 邮政适配层：YYRoot + SessionHeader + 签名算法 + TransactionID生成 | 完成，严格按接口文档附录三实现 |
+| 5个邮政接口 Req/Rsp DTO（字段名严格V_/N_/F_前缀） | 完成，10个DTO文件 |
+| Mock桩：正常/支付流转/签名错误/解密错误/超限/超时 | 完成，通过配置开关切换 |
+| 错误码映射（13项） | 完成 |
+| 超时/重试/幂等设计 | 完成（PostalClient 已实现框架，重试次数/超时可配置） |
+| 商品CRUD + 上下架 + 标签 + 陈列点位 + 机器人抓取标识 | 完成 |
+| 库存锁定/释放/扣减（Redis分布式锁 + DB乐观锁） | 完成 |
+| 低库存告警 + 视觉校验回写接口预留 | 完成 |
+| 订单状态机（7状态） | 完成 |
+| 支付闭环（订单→邮件号→资费→二维码→支付查询→库存联动） | 完成，全流程走通 |
+| 任务状态机（8状态）+ 优先级 + 依赖 + 超时 + 连续失败转人工 | 完成 |
+| 机器人状态上报接口预留（RobotController） | 完成 |
+| 后台管理前端 8页面（登录/商品/订单/库存/任务/告警/审计/用户） | 完成 |
+| 路由守卫 + 分权菜单 | 完成 |
+| JWT + Spring Security + RBAC 三角色 | 完成 |
+| @PreAuthorize 接口级鉴权 | 完成 |
+| 统一错误提示（request.js 拦截器） | 完成 |
+| docker-compose 一键启动中间件 | 完成 |
+| README 文档（环境/启动/模块/对接说明） | 完成 |
+| 演示假数据（5商品+5订单+6任务+5告警+8审计） | 完成，可重复执行 |
+
+### 未完成 / 完成不充分
+
+| 要求 | 状态 | 说明 |
+|------|------|------|
+| 支付独立建表 | 部分完成 | 支付字段合并在 order_info 中，未独立建表。当前订单规模下足够，大规模需拆分 |
+| 商品推荐引擎 | 未完成 | 未实现基于标签/库存/活动规则的推荐算法。后端 DTO 和接口已预留，推荐规则伪代码可在总结文档中说明 |
+| 审计日志自动留痕（AOP） | 部分完成 | AuditLogService 已提供写日志方法，但缺少 `@Aspect` 切面自动拦截。当前需手动调用 log() |
+| 审计日志导出 | 未完成 | 前端无导出按钮，后端无导出接口 |
+| 任务实时刷新（轮询/WebSocket） | 未完成 | 前端 Tasks.vue 仅支持手动刷新，未实现自动轮询 |
+| 收寄订单提交接口实际调用 | 部分完成 | 100+字段 DTO 已完整定义，Mock 可返回结构正确报文，但 OrderService 创建订单时未真正调用此接口（因为需要先有完整收寄件人信息） |
+| 断网降级补偿同步 | 部分完成 | 降级点已预留（PostalClient 异常不阻塞主流程），补偿同步的具体实现未完成 |
+| 集成测试 | 未完成 | 未编写 `@SpringBootTest` 测试用例（签名算法/订单状态机/库存并发锁） |
+| 知识库表 | 未完成 | 标记为可选，未建表 |
+| 技术总结文档 | 未完成 | 需单独编写架构图 + 数据模型 ER + 对接设计 + Mock策略 + 踩坑记录 |
+| 运行截图/录屏 | 未完成 | 需从前端录制完整流程演示 |
+
+> 说明：知识库和数据分析报表在任务中标记为加分项。3天开发周期内优先保证「订单支付闭环 + 邮政对接适配层 + 后台管理」主干跑通，其他模块如实记录受限原因。
