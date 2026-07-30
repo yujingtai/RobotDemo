@@ -1,8 +1,24 @@
 -- ============================================
--- 演示假数据
+-- 演示假数据 (可重复执行)
 -- 使用方式:
 -- docker exec -i robotdemo-mysql mysql -uroot -proot123 robotdemo < backend/src/main/resources/db/demo_data.sql
 -- ============================================
+
+-- 清理已有数据 (TRUNCATE无法用于有外键的表, 用DELETE)
+DELETE FROM audit_log;
+DELETE FROM alert;
+DELETE FROM task_info;
+DELETE FROM order_info;
+DELETE FROM inventory;
+DELETE FROM product;
+
+-- 重置自增ID
+ALTER TABLE product AUTO_INCREMENT = 1;
+ALTER TABLE inventory AUTO_INCREMENT = 1;
+ALTER TABLE order_info AUTO_INCREMENT = 1;
+ALTER TABLE task_info AUTO_INCREMENT = 1;
+ALTER TABLE alert AUTO_INCREMENT = 1;
+ALTER TABLE audit_log AUTO_INCREMENT = 1;
 
 -- 商品数据 (5个文创产品)
 INSERT INTO product (name, description, price, tags, image_url, display_position, robot_grabbable, status) VALUES
