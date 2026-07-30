@@ -3,10 +3,7 @@ package com.postal.robotdemo.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.postal.robotdemo.entity.Inventory;
 import com.postal.robotdemo.vo.InventoryVO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -19,6 +16,16 @@ public interface InventoryMapper extends BaseMapper<Inventory> {
             "i.low_threshold, i.sample_missing, i.sample_misplaced " +
             "FROM inventory i LEFT JOIN product p ON i.product_id = p.id " +
             "WHERE i.deleted = 0 ORDER BY i.available_quantity ASC")
+    @Results({
+        @Result(property = "productId", column = "product_id"),
+        @Result(property = "productName", column = "product_name"),
+        @Result(property = "totalQuantity", column = "total_quantity"),
+        @Result(property = "lockedQuantity", column = "locked_quantity"),
+        @Result(property = "availableQuantity", column = "available_quantity"),
+        @Result(property = "lowThreshold", column = "low_threshold"),
+        @Result(property = "sampleMissing", column = "sample_missing"),
+        @Result(property = "sampleMisplaced", column = "sample_misplaced"),
+    })
     List<InventoryVO> listWithProductName();
 
     /** 乐观锁扣减库存 */
